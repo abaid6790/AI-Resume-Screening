@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>{{ job.title }}</h1>
+    <p class="ars-subtitle">
+      Created {{ job.created_at.strftime('%Y-%m-%d %H:%M') }}{% if job.source_filename %} &middot; uploaded from {{ job.source_filename }}{% endif %}
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn ars-btn-primary" href="{{ url_for('screening.index', job_id=job.id) }}">Screen resumes against this JD</a>
+    <form method="POST" action="{{ url_for('jobs.delete', job_id=job.id) }}" onsubmit="return confirm('Delete this job description? This also removes its screening results.');">
+      <button type="submit" class="btn ars-btn-danger">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="ars-card">
+      <h2 class="ars-card-title">Description</h2>
+      <p class="ars-jd-text">{{ job.raw_text }}</p>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="ars-card">
+      <h2 class="ars-card-title">Detected skills ({{ job.parsed_skills|length }})</h2>
+      {% if job.parsed_skills %}
+      <div class="ars-skill-badges">
+        {% for skill in job.parsed_skills %}
+        <span class="ars-badge-skill">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="ars-empty-note">No recognized skill keywords found in this description.</p>
+      {% endif %}
+      <p class="ars-empty-note mt-3 mb-0">
+        This is a plain keyword pass. Phase 4 adds Gemini-based extraction for resumes,
+        matched against these skills.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

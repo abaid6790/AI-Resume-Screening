@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="ars-subtitle">An overview of screening activity across all job descriptions.</p>
+  </div>
+</div>
+
+<div class="row g-3 ars-stat-row">
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="ars-card ars-stat-card">
+      <span class="ars-stat-label">Total resumes</span>
+      <span class="ars-stat-value">{{ stats.total_resumes }}</span>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="ars-card ars-stat-card">
+      <span class="ars-stat-label">Candidates screened</span>
+      <span class="ars-stat-value">{{ stats.candidates_screened }}</span>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="ars-card ars-stat-card">
+      <span class="ars-stat-label">Average match score</span>
+      <span class="ars-stat-value">{{ stats.average_score }}<span class="ars-stat-unit">%</span></span>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="ars-card ars-stat-card">
+      <span class="ars-stat-label">Recent uploads</span>
+      <span class="ars-stat-value">{{ stats.recent_uploads|length }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1">
+  <div class="col-12 col-lg-7">
+    <div class="ars-card">
+      <h2 class="ars-card-title">Score distribution</h2>
+      {% if stats.chart_data.score_distribution.counts|sum == 0 %}
+      <p class="ars-empty-note">No screening results yet — run AI screening to populate this chart.</p>
+      {% endif %}
+      <canvas id="scoreDistributionChart" height="140" aria-label="Score distribution chart" role="img"></canvas>
+    </div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="ars-card">
+      <h2 class="ars-card-title">Recommendations</h2>
+      {% if stats.chart_data.recommendations.counts|sum == 0 %}
+      <p class="ars-empty-note">Breakdown of Shortlist / Review / Reject appears here once screening has run.</p>
+      {% endif %}
+      <canvas id="recommendationChart" height="140" aria-label="Recommendation breakdown chart" role="img"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="ars-card mt-3">
+  <h2 class="ars-card-title">Recent uploads</h2>
+  {% if stats.recent_uploads %}
+  <div class="table-responsive">
+    <table class="table ars-table align-middle">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Uploaded</th>
+          <th>Score</th>
+          <th>Recommendation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in stats.recent_uploads %}
+        <tr>
+          <td><a href="{{ url_for('resumes.detail', resume_id=item.resume_id) }}">{{ item.name }}</a></td>
+          <td>{{ item.uploaded_at }}</td>
+          <td>{{ item.score }}</td>
+          <td>
+            {% if item.recommendation == "Shortlist" %}<span class="ars-badge-shortlist">Shortlist</span>
+            {% elif item.recommendation == "Review" %}<span class="ars-badge-review">Review</span>
+            {% elif item.recommendation == "Reject" %}<span class="ars-badge-reject">Reject</span>
+            {% elif item.recommendation == "Failed" %}<span class="ars-badge-reject">Failed</span>
+            {% else %}<span class="ars-badge-review">Pending</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="ars-empty-state">
+    <p>No resumes uploaded yet.</p>
+    <a class="btn ars-btn-primary" href="{{ url_for('resumes.index') }}">Upload resumes</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const scoreDist = {{ stats.chart_data.score_distribution | tojson }};
+  const recBreakdown = {{ stats.chart_data.recommendations | tojson }};
+
+  function themeColors() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return {
+      text: isDark ? '#93989F' : '#5B6470',
+      grid: isDark ? '#2A2F37' : '#E4E1D8',
+    };
+  }
+
+  let scoreChart, recChart;
+
+  function renderDashboardCharts() {
+    const colors = themeColors();
+    Chart.defaults.color = colors.text;
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    if (scoreChart) scoreChart.destroy();
+    if (recChart) recChart.destroy();
+
+    scoreChart = new Chart(document.getElementById('scoreDistributionChart'), {
+      type: 'bar',
+      data: {
+        labels: scoreDist.labels,
+        datasets: [{
+          label: 'Candidates',
+          data: scoreDist.counts,
+          backgroundColor: '#0F6659',
+          borderRadius: 6,
+          maxBarThickness: 48,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: colors.grid } },
+        },
+      },
+    });
+
+    recChart = new Chart(document.getElementById('recommendationChart'), {
+      type: 'doughnut',
+      data: {
+        labels: recBreakdown.labels,
+        datasets: [{
+          data: recBreakdown.counts,
+          backgroundColor: ['#1F9D6B', '#D9A441', '#D64545'],
+          borderWidth: 0,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+      },
+    });
+  }
+
+  renderDashboardCharts();
+
+  // Redraw with correct axis/legend colors when the person toggles dark/light mode.
+  const themeToggleBtn = document.getElementById('themeToggle');
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', renderDashboardCharts);
+  }
+</script>
+{% endblock %}

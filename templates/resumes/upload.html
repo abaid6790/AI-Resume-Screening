@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resumes — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Upload Resumes</h1>
+    <p class="ars-subtitle">Drag and drop PDF resumes, or click to browse. Multiple files supported.</p>
+  </div>
+</div>
+
+<div class="ars-card ars-form-card">
+  <form id="resumeUploadForm" method="POST" action="{{ url_for('resumes.upload') }}"
+        enctype="multipart/form-data" data-redirect-url="{{ url_for('resumes.index') }}" novalidate>
+
+    <div id="dropzone" class="ars-dropzone" tabindex="0" role="button" aria-label="Upload resumes">
+      <div class="ars-dropzone-icon" aria-hidden="true">&#8593;</div>
+      <p class="ars-dropzone-text">Drag &amp; drop PDF resumes here</p>
+      <p class="ars-dropzone-subtext">or click to browse your files</p>
+      <input type="file" id="resumeFiles" name="resume_files" accept=".pdf" multiple hidden>
+    </div>
+
+    <ul id="fileList" class="ars-file-list"></ul>
+
+    <div id="uploadProgressWrap" class="ars-progress-wrap d-none">
+      <div class="progress" style="height: 10px;">
+        <div id="uploadProgressBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+      </div>
+      <span id="uploadProgressLabel" class="ars-empty-note">Uploading…</span>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+      <button type="submit" id="uploadSubmitBtn" class="btn ars-btn-primary" disabled>Upload</button>
+      <a class="btn ars-btn-ghost" href="{{ url_for('resumes.index') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

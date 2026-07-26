@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Resumes — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Resumes</h1>
+    <p class="ars-subtitle">All uploaded resumes and their text-extraction status.</p>
+  </div>
+  <a class="btn ars-btn-primary" href="{{ url_for('resumes.upload') }}">+ Upload resumes</a>
+</div>
+
+{% if resumes %}
+<div class="ars-card">
+  <div class="table-responsive">
+    <table class="table ars-table align-middle">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>File</th>
+          <th>Status</th>
+          <th>Uploaded</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for resume in resumes %}
+        <tr>
+          <td><a href="{{ url_for('resumes.detail', resume_id=resume.id) }}">{{ resume.candidate_name or "Unrecognized name" }}</a></td>
+          <td>{{ resume.filename }}</td>
+          <td>
+            {% if resume.extraction_status.value == "success" %}
+              <span class="ars-badge-shortlist">Extracted</span>
+            {% elif resume.extraction_status.value == "needs_ocr" %}
+              <span class="ars-badge-review">Needs OCR</span>
+            {% elif resume.extraction_status.value == "failed" %}
+              <span class="ars-badge-reject">Failed</span>
+            {% else %}
+              <span class="ars-badge-review">Pending</span>
+            {% endif %}
+          </td>
+          <td>{{ resume.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm ars-btn-secondary" href="{{ url_for('resumes.detail', resume_id=resume.id) }}">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="ars-card">
+  <div class="ars-empty-state">
+    <p>No resumes uploaded yet.</p>
+    <a class="btn ars-btn-primary" href="{{ url_for('resumes.upload') }}">Upload your first resumes</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

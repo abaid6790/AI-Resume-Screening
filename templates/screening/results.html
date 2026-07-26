@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Results — {{ job.title }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Results: {{ job.title }}</h1>
+    <p class="ars-subtitle">
+      Showing <span data-result-count-for="resultsTable">{{ rows|length }}</span> of {{ rows|length }} result(s). Click a column header to sort.
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <button type="button" class="btn ars-btn-secondary" onclick="arsExportResults('csv')">Export CSV</button>
+    <button type="button" class="btn ars-btn-secondary" onclick="arsExportResults('pdf')">Export PDF</button>
+    <a class="btn ars-btn-primary" href="{{ url_for('screening.index', job_id=job.id) }}">Screen more resumes</a>
+  </div>
+</div>
+
+{% if rows %}
+<div class="ars-card mb-3">
+  <div class="ars-filter-bar">
+    <div class="ars-filter-field">
+      <label class="form-label" for="resultsSearch">Search by name</label>
+      <input type="search" id="resultsSearch" class="form-control" placeholder="Candidate name…"
+             data-filter-for="resultsTable" data-filter-key="name">
+    </div>
+    <div class="ars-filter-field">
+      <label class="form-label">Score range</label>
+      <div class="d-flex gap-2">
+        <input type="number" id="scoreMin" class="form-control" placeholder="Min" min="0" max="100"
+               data-filter-for="resultsTable" data-filter-key="score" data-filter-type="min">
+        <input type="number" id="scoreMax" class="form-control" placeholder="Max" min="0" max="100"
+               data-filter-for="resultsTable" data-filter-key="score" data-filter-type="max">
+      </div>
+    </div>
+    <div class="ars-filter-field">
+      <label class="form-label">Recommendation</label>
+      <div class="ars-filter-checks">
+        {% for rec in ["Shortlist", "Review", "Reject", "Failed", "Pending"] %}
+        <label class="ars-filter-check">
+          <input type="checkbox" value="{{ rec }}" data-filter-for="resultsTable" data-filter-key="recommendation">
+          {{ rec }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ars-card">
+  <div class="table-responsive">
+    <table id="resultsTable" class="table ars-table ars-sortable-table align-middle" data-page-size="10">
+      <thead>
+        <tr>
+          <th data-sort-key="name">Candidate</th>
+          <th data-sort-key="score">Score</th>
+          <th data-sort-key="experience">Experience</th>
+          <th data-sort-key="skills">Skills</th>
+          <th data-sort-key="recommendation">Recommendation</th>
+          <th data-sort-key="screened">Screened</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr data-result-id="{{ row.id }}">
+          <td data-sort-key="name" data-sort-value="{{ row.candidate_name|lower }}">{{ row.candidate_name }}</td>
+          <td data-sort-key="score" data-sort-value="{{ row.match_score if row.match_score is not none else -1 }}">
+            {% if row.match_score is not none %}<strong>{{ row.match_score }}</strong>/100{% else %}—{% endif %}
+          </td>
+          <td data-sort-key="experience" data-sort-value="{{ row.years_experience }}">
+            {% if row.years_experience %}{{ "%.1f"|format(row.years_experience) }} yrs{% else %}—{% endif %}
+          </td>
+          <td data-sort-key="skills" data-sort-value="{{ row.skills_count }}">{{ row.skills_count }}</td>
+          <td data-sort-key="recommendation" data-sort-value="{{ row.recommendation }}">
+            {% if row.recommendation == "Shortlist" %}<span class="ars-badge-shortlist">Shortlist</span>
+            {% elif row.recommendation == "Review" %}<span class="ars-badge-review">Review</span>
+            {% elif row.recommendation == "Reject" %}<span class="ars-badge-reject">Reject</span>
+            {% elif row.recommendation == "Failed" %}<span class="ars-badge-reject">Failed</span>
+            {% else %}<span class="ars-badge-review">Pending</span>
+            {% endif %}
+          </td>
+          <td data-sort-key="screened" data-sort-value="{{ row.created_at.isoformat() }}">{{ row.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm ars-btn-secondary" href="{{ url_for('screening.detail', result_id=row.id) }}">View report</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div id="resultsTablePagination" data-pagination-for="resultsTable" class="ars-pagination"></div>
+</div>
+<input type="hidden" id="resultsTableFilteredIds" data-result-ids-for="resultsTable">
+{% else %}
+<div class="ars-card">
+  <div class="ars-empty-state">
+    <p>No resumes have been screened against this job description yet.</p>
+    <a class="btn ars-btn-primary" href="{{ url_for('screening.index', job_id=job.id) }}">Run screening</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/data-table.js') }}"></script>
+<script>
+  // Export exactly what's currently visible after search/filter, not every
+  // result for the job — the hidden input is kept in sync by data-table.js.
+  function arsExportResults(kind) {
+    const idsInput = document.getElementById('resultsTableFilteredIds');
+    const ids = idsInput ? idsInput.value : '';
+    const base = kind === 'csv'
+      ? "{{ url_for('export.export_csv', job_id=job.id) }}"
+      : "{{ url_for('export.export_pdf', job_id=job.id) }}";
+    window.location.href = ids ? base + '?result_ids=' + encodeURIComponent(ids) : base;
+  }
+</script>
+{% endblock %}

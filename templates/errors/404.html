@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Page not found — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-error-state">
+  <span class="ars-error-code">404</span>
+  <h1>We couldn't find that page</h1>
+  <p>The link may be outdated, or the page may have moved.</p>
+  <a class="btn ars-btn-primary" href="{{ url_for('dashboard.index') }}">Back to dashboard</a>
+</div>
+{% endblock %}

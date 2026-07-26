@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resume.candidate_name or resume.filename }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>{{ resume.candidate_name or "Unrecognized name" }}</h1>
+    <p class="ars-subtitle">
+      {{ resume.filename }} &middot; uploaded {{ resume.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+      {% if resume.candidate_email %} &middot; {{ resume.candidate_email }}{% endif %}
+    </p>
+  </div>
+  <form method="POST" action="{{ url_for('resumes.delete', resume_id=resume.id) }}"
+        onsubmit="return confirm('Delete this resume? This also removes its screening results.');">
+    <button type="submit" class="btn ars-btn-danger">Delete</button>
+  </form>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-8">
+    <div class="ars-card">
+      <h2 class="ars-card-title">Extracted text</h2>
+      {% if resume.raw_text %}
+      <div class="ars-text-preview">{{ resume.raw_text }}</div>
+      {% else %}
+      <p class="ars-empty-note mb-0">
+        {{ resume.extraction_error or "No text could be extracted from this file." }}
+      </p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-12 col-lg-4">
+    <div class="ars-card">
+      <h2 class="ars-card-title">Status</h2>
+      {% if resume.extraction_status.value == "success" %}
+        <span class="ars-badge-shortlist">Text extracted</span>
+      {% elif resume.extraction_status.value == "needs_ocr" %}
+        <span class="ars-badge-review">Needs OCR</span>
+      {% elif resume.extraction_status.value == "failed" %}
+        <span class="ars-badge-reject">Extraction failed</span>
+      {% else %}
+        <span class="ars-badge-review">Pending</span>
+      {% endif %}
+
+      {% if resume.extraction_error %}
+      <p class="ars-empty-note mt-2 mb-0">{{ resume.extraction_error }}</p>
+      {% endif %}
+
+      <p class="ars-empty-note mt-3 mb-0">
+        Name and email above are a simple heuristic. Full skills, education, and
+        experience extraction happens when this resume is
+        <a href="{{ url_for('screening.index') }}">screened against a job description</a>.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

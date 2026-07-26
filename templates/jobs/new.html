@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}New Job Description — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>New Job Description</h1>
+    <p class="ars-subtitle">Paste the description or upload a .txt / .pdf file.</p>
+  </div>
+</div>
+
+<div class="ars-card ars-form-card">
+  <form method="POST" action="{{ url_for('jobs.new') }}" enctype="multipart/form-data" novalidate>
+    <div class="mb-3">
+      <label class="form-label" for="title">Title</label>
+      <input class="form-control" type="text" id="title" name="title" value="{{ title or '' }}" placeholder="e.g. Senior Backend Engineer" required>
+    </div>
+
+    <div class="mb-3">
+      <div class="ars-source-toggle" role="tablist" aria-label="Job description source">
+        <button type="button" class="ars-toggle-btn active" data-target="paste-panel">Paste text</button>
+        <button type="button" class="ars-toggle-btn" data-target="upload-panel">Upload file</button>
+      </div>
+    </div>
+
+    <div id="paste-panel" class="ars-source-panel">
+      <label class="form-label" for="raw_text">Job description text</label>
+      <textarea class="form-control" id="raw_text" name="raw_text" rows="10" placeholder="Paste the full job description here...">{{ raw_text or '' }}</textarea>
+    </div>
+
+    <div id="upload-panel" class="ars-source-panel d-none">
+      <label class="form-label" for="jd_file">Job description file</label>
+      <input class="form-control" type="file" id="jd_file" name="jd_file" accept=".txt,.pdf">
+      <div class="form-text">Accepted: .txt, .pdf. If both a file and pasted text are provided, the uploaded file takes priority.</div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+      <button type="submit" id="saveJobBtn" class="btn ars-btn-primary">Save job description</button>
+      <a class="btn ars-btn-ghost" href="{{ url_for('jobs.index') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.querySelectorAll('.ars-toggle-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.ars-toggle-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.ars-source-panel').forEach(function (panel) { panel.classList.add('d-none'); });
+      document.getElementById(btn.dataset.target).classList.remove('d-none');
+    });
+  });
+
+  const jobForm = document.getElementById('saveJobBtn').closest('form');
+  jobForm.addEventListener('submit', function () {
+    const btn = document.getElementById('saveJobBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ars-spinner" aria-hidden="true"></span> Saving…';
+  });
+</script>
+{% endblock %}

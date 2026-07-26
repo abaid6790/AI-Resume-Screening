@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-auth-wrap">
+  <div class="ars-card ars-auth-card">
+    <div class="ars-auth-brand">
+      <span class="ars-brand-mark" aria-hidden="true">RS</span>
+    </div>
+    <h1 class="ars-auth-title">Create your account</h1>
+    <p class="ars-subtitle mb-4">Screen resumes with AI in minutes.</p>
+
+    <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+      <div class="mb-3">
+        <label class="form-label" for="email">Email</label>
+        <input class="form-control" type="email" id="email" name="email" value="{{ email or '' }}" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control" type="password" id="password" name="password" minlength="8" required>
+        <div class="form-text">At least 8 characters.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="confirm_password">Confirm password</label>
+        <input class="form-control" type="password" id="confirm_password" name="confirm_password" minlength="8" required>
+      </div>
+      <button type="submit" class="btn ars-btn-primary w-100">Create account</button>
+    </form>
+
+    <p class="ars-auth-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

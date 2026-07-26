@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Report — {{ result.resume.candidate_name or result.resume.filename }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>{{ result.resume.candidate_name or result.resume.filename }}</h1>
+    <p class="ars-subtitle">
+      Screened against "{{ result.job_description.title }}" on {{ result.created_at.strftime('%Y-%m-%d %H:%M') }}
+    </p>
+  </div>
+  <a class="btn ars-btn-ghost" href="{{ url_for('screening.results', job_id=result.job_description_id) }}">Back to results</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-4">
+    <div class="ars-card text-center">
+      <h2 class="ars-card-title">Match score</h2>
+      {% if result.match_score is not none %}
+        <div class="ars-score-value">{{ result.match_score }}<span class="ars-stat-unit">/100</span></div>
+        <div class="progress ars-score-progress">
+          <div class="progress-bar {{ 'ars-score-fill-good' if result.match_score >= 75 else ('ars-score-fill-warn' if result.match_score >= 50 else 'ars-score-fill-bad') }}"
+               style="width: {{ result.match_score }}%;"></div>
+        </div>
+      {% else %}
+        <p class="ars-empty-note">No score available.</p>
+      {% endif %}
+      <div class="mt-3">
+        {% if result.recommendation.value == "Shortlist" %}<span class="ars-badge-shortlist">Shortlist</span>
+        {% elif result.recommendation.value == "Review" %}<span class="ars-badge-review">Review</span>
+        {% elif result.recommendation.value == "Reject" %}<span class="ars-badge-reject">Reject</span>
+        {% elif result.recommendation.value == "Failed" %}<span class="ars-badge-reject">Failed</span>
+        {% else %}<span class="ars-badge-review">Pending</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="ars-card mt-3">
+      <h2 class="ars-card-title">Why this score?</h2>
+      <p class="mb-0">{{ result.explanation or "No explanation available." }}</p>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-8">
+    <div class="ars-card mb-3">
+      <h2 class="ars-card-title">Matching skills ({{ result.matching_skills|length }})</h2>
+      {% if result.matching_skills %}
+      <div class="ars-skill-badges">
+        {% for skill in result.matching_skills %}<span class="ars-badge-skill">{{ skill }}</span>{% endfor %}
+      </div>
+      {% else %}<p class="ars-empty-note mb-0">None identified.</p>{% endif %}
+    </div>
+
+    <div class="ars-card mb-3">
+      <h2 class="ars-card-title">Missing skills ({{ result.missing_skills|length }})</h2>
+      {% if result.missing_skills %}
+      <div class="ars-skill-badges">
+        {% for skill in result.missing_skills %}<span class="ars-badge-skill-missing">{{ skill }}</span>{% endfor %}
+      </div>
+      {% else %}<p class="ars-empty-note mb-0">None — full skill coverage.</p>{% endif %}
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="ars-card">
+          <h2 class="ars-card-title">Experience</h2>
+          {% if result.extracted_experience %}
+          <ul class="ars-plain-list">
+            {% for exp in result.extracted_experience %}
+            <li><strong>{{ exp.title }}</strong>{% if exp.company %} at {{ exp.company }}{% endif %}{% if exp.years %} — {{ exp.years }} yrs{% endif %}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<p class="ars-empty-note mb-0">No experience detected.</p>{% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="ars-card">
+          <h2 class="ars-card-title">Education</h2>
+          {% if result.extracted_education %}
+          <ul class="ars-plain-list">
+            {% for edu in result.extracted_education %}
+            <li><strong>{{ edu.degree }}</strong>{% if edu.institution %} — {{ edu.institution }}{% endif %}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<p class="ars-empty-note mb-0">No education detected.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

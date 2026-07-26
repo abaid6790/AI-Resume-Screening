@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Check Your Email — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-auth-wrap">
+  <div class="ars-card ars-auth-card text-center">
+    <div class="ars-auth-brand">
+      <span class="ars-brand-mark" aria-hidden="true">RS</span>
+    </div>
+    <h1 class="ars-auth-title">Check your email</h1>
+    <p class="ars-subtitle">
+      We've sent a verification link{% if email %} to <strong>{{ email }}</strong>{% endif %}.
+      Click it to activate your account — it's valid for 5 Mins
+    </p>
+    <p class="ars-auth-footer">
+      Didn't get it? <a href="{{ url_for('auth.resend') }}">Resend the verification email</a><br>
+      Already verified? <a href="{{ url_for('auth.login') }}">Log in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

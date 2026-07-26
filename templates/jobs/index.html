@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Job Descriptions — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Job Descriptions</h1>
+    <p class="ars-subtitle">Saved job descriptions you can reuse across screening runs.</p>
+  </div>
+  <a class="btn ars-btn-primary" href="{{ url_for('jobs.new') }}">+ New job description</a>
+</div>
+
+{% if jobs %}
+<div class="ars-card">
+  <div class="table-responsive">
+    <table class="table ars-table align-middle">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Skills detected</th>
+          <th>Screenings run</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>
+            <a href="{{ url_for('jobs.detail', job_id=job.id) }}">{{ job.title }}</a>
+            {% if job.source_filename %}<div class="ars-empty-note mb-0">from {{ job.source_filename }}</div>{% endif %}
+          </td>
+          <td>{{ job.parsed_skills|length }}</td>
+          <td>{{ job.screening_results|length }}</td>
+          <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm ars-btn-secondary" href="{{ url_for('jobs.detail', job_id=job.id) }}">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="ars-card">
+  <div class="ars-empty-state">
+    <p>No job descriptions saved yet.</p>
+    <a class="btn ars-btn-primary" href="{{ url_for('jobs.new') }}">Create your first job description</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

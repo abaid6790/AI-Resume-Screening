@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}AI Screening — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>AI Screening</h1>
+    <p class="ars-subtitle">Choose a job description and the resumes to screen against it.</p>
+  </div>
+</div>
+
+<div class="ars-card mb-3">
+  <form method="GET" action="{{ url_for('screening.index') }}" class="d-flex gap-3 align-items-end flex-wrap">
+    <div>
+      <label class="form-label" for="job_id">Job description</label>
+      <select class="form-select" id="job_id" name="job_id" onchange="this.form.submit()">
+        <option value="">Select a job description…</option>
+        {% for job in jobs %}
+        <option value="{{ job.id }}" {% if selected_job and selected_job.id == job.id %}selected{% endif %}>{{ job.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% if not jobs %}
+    <p class="ars-empty-note mb-0">No job descriptions yet. <a href="{{ url_for('jobs.new') }}">Create one first</a>.</p>
+    {% endif %}
+  </form>
+</div>
+
+{% if selected_job %}
+  {% if not resumes %}
+  <div class="ars-card">
+    <div class="ars-empty-state">
+      <p>No resumes uploaded yet.</p>
+      <a class="btn ars-btn-primary" href="{{ url_for('resumes.upload') }}">Upload resumes</a>
+    </div>
+  </div>
+  {% else %}
+  <form method="POST" action="{{ url_for('screening.run') }}">
+    <input type="hidden" name="job_id" value="{{ selected_job.id }}">
+    <div class="ars-card">
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <h2 class="ars-card-title mb-0">Resumes ({{ resumes|length }})</h2>
+        <button type="button" id="selectAllBtn" class="btn btn-sm ars-btn-secondary">Select all unscreened</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table ars-table align-middle">
+          <thead>
+            <tr>
+              <th style="width: 40px;"></th>
+              <th>Candidate</th>
+              <th>File</th>
+              <th>Text status</th>
+              <th>Screened for this JD?</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for resume in resumes %}
+            <tr>
+              <td>
+                <input class="form-check-input resume-checkbox" type="checkbox" name="resume_ids" value="{{ resume.id }}"
+                       {% if not resume.raw_text %}disabled{% endif %}
+                       data-screened="{{ 'true' if resume.id in already_screened_ids else 'false' }}">
+              </td>
+              <td>{{ resume.candidate_name or resume.filename }}</td>
+              <td>{{ resume.filename }}</td>
+              <td>
+                {% if resume.extraction_status.value == "success" %}
+                  <span class="ars-badge-shortlist">Ready</span>
+                {% else %}
+                  <span class="ars-badge-reject">No text</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if resume.id in already_screened_ids %}
+                  <span class="ars-badge-review">Re-screen</span>
+                {% else %}
+                  <span class="ars-empty-note mb-0">Not yet</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mt-3 d-flex gap-2 align-items-center flex-wrap">
+      <button type="submit" id="runScreeningBtn" class="btn ars-btn-primary">Run AI screening</button>
+      <a class="btn ars-btn-ghost" href="{{ url_for('screening.results', job_id=selected_job.id) }}">View existing results</a>
+      <span class="ars-empty-note mb-0">Calls the Gemini API once per selected resume — this may take a moment.</span>
+    </div>
+  </form>
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  if (selectAllBtn) {
+    selectAllBtn.addEventListener('click', function () {
+      document.querySelectorAll('.resume-checkbox:not([disabled])').forEach(function (cb) {
+        if (cb.dataset.screened === 'false') cb.checked = true;
+      });
+    });
+  }
+
+  const screeningForm = document.getElementById('runScreeningBtn') ? document.getElementById('runScreeningBtn').closest('form') : null;
+  if (screeningForm) {
+    screeningForm.addEventListener('submit', function (e) {
+      const anyChecked = screeningForm.querySelector('.resume-checkbox:checked');
+      if (!anyChecked) {
+        e.preventDefault();
+        return;
+      }
+      const btn = document.getElementById('runScreeningBtn');
+      btn.disabled = true;
+      btn.classList.add('ars-btn-loading');
+      btn.innerHTML = '<span class="ars-spinner" aria-hidden="true"></span> Screening in progress…';
+    });
+  }
+</script>
+{% endblock %}

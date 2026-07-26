@@ -1,0 +1,30 @@
+# Environment
+.env
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Database
+database/*.db
+database/*.sqlite3
+
+# Uploaded / generated files
+uploads/*
+!uploads/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Logs
+logs/*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
