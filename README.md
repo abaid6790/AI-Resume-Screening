@@ -94,14 +94,15 @@ It's a full-stack Flask app: server-rendered pages (Jinja2 + Bootstrap 5), a SQL
 
 ## Screenshots
 
-| Dashboard |
+> Add real screenshots to `docs/screenshots/` and update the paths below — placeholders shown here.
 
-| ![Dashboard](screenshots/dashboard.png) | ![Dashboard](screenshots/dashboard-1.png) |
-
+| Dashboard | AI Screening Report |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Report](docs/screenshots/report.png) |
 
 | Results (search & filter) | Login |
-
-| ![Results](screenshots/Results.png) | ![Login](screenshots/Login.png) |
+|---|---|
+| ![Results](docs/screenshots/results.png) | ![Login](docs/screenshots/login.png) |
 
 ---
 

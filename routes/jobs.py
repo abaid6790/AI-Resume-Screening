@@ -9,6 +9,7 @@ from flask import (
     Blueprint,
     current_app,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -27,8 +28,12 @@ jobs_bp = Blueprint("jobs", __name__)
 
 @jobs_bp.route("/")
 def index() -> str:
-    """List all saved job descriptions, most recent first."""
-    jobs = JobDescription.query.order_by(JobDescription.created_at.desc()).all()
+    """List all job descriptions belonging to the current team, most recent first."""
+    jobs = (
+        JobDescription.query.filter_by(team_id=g.current_team.id)
+        .order_by(JobDescription.created_at.desc())
+        .all()
+    )
     return render_template("jobs/index.html", jobs=jobs)
 
 
@@ -62,6 +67,7 @@ def new():
         return render_template("jobs/new.html", title=title, raw_text=pasted_text), 400
 
     job = JobDescription(
+        team_id=g.current_team.id,
         title=title,
         raw_text=raw_text,
         parsed_skills=extract_skills(raw_text),
@@ -69,22 +75,22 @@ def new():
     )
     db.session.add(job)
     db.session.commit()
-    logger.info("Created job description id=%s title=%r", job.id, job.title)
+    logger.info("Created job description id=%s title=%r team_id=%s", job.id, job.title, job.team_id)
     flash(f'Saved "{job.title}".', "success")
     return redirect(url_for("jobs.detail", job_id=job.id))
 
 
 @jobs_bp.route("/<int:job_id>")
 def detail(job_id: int):
-    """Show one job description with its detected skills."""
-    job = JobDescription.query.get_or_404(job_id)
+    """Show one job description with its detected skills. 404s if it's not this team's."""
+    job = JobDescription.query.filter_by(id=job_id, team_id=g.current_team.id).first_or_404()
     return render_template("jobs/detail.html", job=job)
 
 
 @jobs_bp.route("/<int:job_id>/delete", methods=["POST"])
 def delete(job_id: int):
     """Delete a job description and its (cascaded) screening results."""
-    job = JobDescription.query.get_or_404(job_id)
+    job = JobDescription.query.filter_by(id=job_id, team_id=g.current_team.id).first_or_404()
     title = job.title
     db.session.delete(job)
     db.session.commit()

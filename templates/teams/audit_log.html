@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log — {{ team.name }} — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Audit Log</h1>
+    <p class="ars-subtitle">Actions taken within {{ team.name }}, most recent first.</p>
+  </div>
+  <a class="btn ars-btn-ghost" href="{{ url_for('teams.index') }}">Back to team</a>
+</div>
+
+{% if pagination.items %}
+<div class="ars-card">
+  <div class="table-responsive">
+    <table class="table ars-table align-middle">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Who</th>
+          <th>Action</th>
+          <th>Details</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in pagination.items %}
+        <tr>
+          <td>{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ entry.user_email or "—" }}</td>
+          <td><code>{{ entry.action }}</code></td>
+          <td>{{ entry.description or "—" }}</td>
+          <td class="ars-empty-note">{{ entry.ip_address or "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="ars-pagination">
+    {% for page_num in range(1, pagination.pages + 1) %}
+    <a class="ars-page-btn {{ 'active' if page_num == pagination.page else '' }}"
+       href="{{ url_for('teams.audit_log', page=page_num) }}">{{ page_num }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="ars-card">
+  <div class="ars-empty-state">
+    <p>No activity recorded yet.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

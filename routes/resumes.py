@@ -9,6 +9,7 @@ from flask import (
     Blueprint,
     current_app,
     flash,
+    g,
     redirect,
     render_template,
     request,
@@ -32,8 +33,12 @@ resumes_bp = Blueprint("resumes", __name__)
 
 @resumes_bp.route("/")
 def index() -> str:
-    """List all uploaded resumes, most recent first."""
-    resumes = Resume.query.order_by(Resume.uploaded_at.desc()).all()
+    """List all resumes belonging to the current team, most recent first."""
+    resumes = (
+        Resume.query.filter_by(team_id=g.current_team.id)
+        .order_by(Resume.uploaded_at.desc())
+        .all()
+    )
     return render_template("resumes/index.html", resumes=resumes)
 
 
@@ -70,14 +75,14 @@ def upload():
 @resumes_bp.route("/<int:resume_id>")
 def detail(resume_id: int):
     """Show one resume's extraction status, guessed identity, and raw text."""
-    resume = Resume.query.get_or_404(resume_id)
+    resume = Resume.query.filter_by(id=resume_id, team_id=g.current_team.id).first_or_404()
     return render_template("resumes/detail.html", resume=resume)
 
 
 @resumes_bp.route("/<int:resume_id>/delete", methods=["POST"])
 def delete(resume_id: int):
     """Delete a resume record (cascades screening results) and its file on disk."""
-    resume = Resume.query.get_or_404(resume_id)
+    resume = Resume.query.filter_by(id=resume_id, team_id=g.current_team.id).first_or_404()
     filepath = Path(resume.filepath)
     filename = resume.filename
 
@@ -112,6 +117,7 @@ def _save_and_process(upload: FileStorage) -> Resume:
     text, status, error = extract_text_from_pdf(stored_path)
 
     resume = Resume(
+        team_id=g.current_team.id,
         filename=filename,
         filepath=str(stored_path),
         candidate_name=extract_candidate_name(text) if text else None,
@@ -123,6 +129,7 @@ def _save_and_process(upload: FileStorage) -> Resume:
     db.session.add(resume)
     db.session.commit()
     logger.info(
-        "Uploaded resume id=%s filename=%r status=%s", resume.id, filename, status.value
+        "Uploaded resume id=%s filename=%r status=%s team_id=%s",
+        resume.id, filename, status.value, resume.team_id,
     )
     return resume

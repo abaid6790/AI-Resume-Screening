@@ -19,6 +19,8 @@ def register_blueprints(app: Flask) -> None:
     from routes.export import export_bp
     from routes.auth import auth_bp
     from routes.assistant import assistant_bp
+    from routes.teams import teams_bp
+    from routes.account import account_bp
 
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(jobs_bp, url_prefix="/jobs")
@@ -27,3 +29,5 @@ def register_blueprints(app: Flask) -> None:
     app.register_blueprint(export_bp, url_prefix="/export")
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(assistant_bp, url_prefix="/assistant")
+    app.register_blueprint(teams_bp, url_prefix="/teams")
+    app.register_blueprint(account_bp, url_prefix="/account")

@@ -3,20 +3,26 @@ Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 Flask-Login==0.6.3
 python-dotenv==1.0.1
+
+# --- WSGI server for production (Phase 8) ---
 gunicorn==22.0.0
 
 # --- File parsing ---
-pdfplumber==0.11.4       
+pdfplumber==0.11.4          # Phase 2/3: PDF text extraction (job descriptions + resumes)
 
 # --- AI screening ---
-google-generativeai==0.8.3
+google-generativeai==0.8.3  # Phase 4: Gemini API client
 
 # --- Export ---
-reportlab==4.2.2  
+reportlab==4.2.2            # Phase 6: PDF report export
 
+# --- Two-factor authentication ---
+pyotp==2.9.0                 # TOTP code generation/verification
+qrcode==7.4.2                 # 2FA setup QR code (SVG output, no Pillow needed)
 
-pandas==2.2.2               
-alembic==1.13.2            
-pytest==8.3.2           
-ruff==0.5.6                  
-mypy==1.11.1                 
+# --- Added in later phases (kept here so `pip install` only needs to run once) ---
+# pandas==2.2.2               # optional: not used — CSV export uses the stdlib csv module
+# alembic==1.13.2             # Phase 1 (optional): DB migrations
+# pytest==8.3.2                # Phase 8: test suite
+# ruff==0.5.6                  # Phase 8: linting
+# mypy==1.11.1                 # Phase 8: type checking

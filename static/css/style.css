@@ -1049,6 +1049,122 @@ textarea:focus-visible {
   }
 }
 
+/* ---------- Navbar user dropdown ---------- */
+.ars-user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: transparent;
+  border: 1px solid var(--ars-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem 0.3rem 0.3rem;
+  cursor: pointer;
+}
+.ars-user-trigger:hover {
+  background: var(--ars-surface-2);
+}
+
+.ars-dropdown-menu {
+  background: var(--ars-surface);
+  border: 1px solid var(--ars-border);
+  box-shadow: var(--ars-shadow);
+  min-width: 220px;
+}
+.ars-dropdown-menu .dropdown-item {
+  color: var(--ars-text);
+  font-size: 0.88rem;
+}
+.ars-dropdown-menu .dropdown-item:hover,
+.ars-dropdown-menu .dropdown-item:focus {
+  background: var(--ars-surface-2);
+  color: var(--ars-text);
+}
+.ars-dropdown-menu .dropdown-header {
+  color: var(--ars-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.ars-dropdown-menu .dropdown-divider {
+  border-color: var(--ars-border);
+}
+
+/* ---------- Team role badges ---------- */
+.ars-role-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.ars-role-owner  { color: var(--ars-amber); background: rgba(217, 164, 65, 0.14); }
+.ars-role-admin  { color: var(--ars-teal);  background: rgba(15, 102, 89, 0.1); }
+[data-theme="dark"] .ars-role-admin { color: #4FBFAE; }
+.ars-role-member { color: var(--ars-text-muted); background: var(--ars-surface-2); }
+
+.ars-role-select {
+  width: auto;
+  display: inline-block;
+  font-size: 0.82rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+
+/* ---------- 2FA setup / recovery codes ---------- */
+.ars-qr-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  background: #fff;
+  border-radius: var(--ars-radius-sm);
+}
+.ars-qr-wrap svg {
+  width: 200px;
+  height: 200px;
+}
+
+.ars-manual-key {
+  display: inline-block;
+  background: var(--ars-surface-2);
+  border: 1px solid var(--ars-border);
+  border-radius: var(--ars-radius-sm);
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+}
+
+.ars-otp-input {
+  font-family: var(--ars-font-display);
+  font-size: 1.3rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.ars-recovery-codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+.ars-recovery-codes code {
+  display: block;
+  background: var(--ars-surface-2);
+  border: 1px solid var(--ars-border);
+  border-radius: var(--ars-radius-sm);
+  padding: 0.5rem 0.7rem;
+  text-align: center;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+}
+
+@media (max-width: 576px) {
+  .ars-recovery-codes {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   * {

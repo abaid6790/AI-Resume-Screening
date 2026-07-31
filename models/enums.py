@@ -27,3 +27,11 @@ class RecommendationEnum(str, enum.Enum):
     REVIEW = "Review"
     REJECT = "Reject"
     FAILED = "Failed"
+
+
+class TeamRole(str, enum.Enum):
+    """A user's permission level within one team."""
+
+    OWNER = "owner"    # full control: manage members/roles, cannot be removed
+    ADMIN = "admin"     # can invite/remove Members, cannot manage Owner/other Admins
+    MEMBER = "member"   # normal app usage, no team-management access

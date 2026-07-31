@@ -7,6 +7,7 @@ from __future__ import annotations
 import datetime as dt
 
 from models import ExtractionStatus, JobDescription, RecommendationEnum, Resume, ScreeningResult, User, db
+from services.team_service import create_personal_team, get_user_teams
 
 
 def seed_database() -> None:
@@ -23,7 +24,11 @@ def seed_database() -> None:
         db.session.add(demo_user)
         db.session.commit()
 
+    demo_teams = get_user_teams(demo_user)
+    demo_team = demo_teams[0] if demo_teams else create_personal_team(demo_user, name="Demo Team")
+
     job = JobDescription(
+        team_id=demo_team.id,
         title="Senior Backend Engineer (Python)",
         raw_text=(
             "We are looking for a Senior Backend Engineer with 5+ years of "
@@ -39,6 +44,7 @@ def seed_database() -> None:
 
     resumes = [
         Resume(
+            team_id=demo_team.id,
             filename="asha_kapoor_resume.pdf",
             filepath="uploads/asha_kapoor_resume.pdf",
             candidate_name="Asha Kapoor",
@@ -48,6 +54,7 @@ def seed_database() -> None:
             uploaded_at=dt.datetime.utcnow(),
         ),
         Resume(
+            team_id=demo_team.id,
             filename="daniel_osei_resume.pdf",
             filepath="uploads/daniel_osei_resume.pdf",
             candidate_name="Daniel Osei",
@@ -57,6 +64,7 @@ def seed_database() -> None:
             uploaded_at=dt.datetime.utcnow(),
         ),
         Resume(
+            team_id=demo_team.id,
             filename="mei_lin_resume.pdf",
             filepath="uploads/mei_lin_resume.pdf",
             candidate_name="Mei Lin",

@@ -9,10 +9,12 @@ from flask import url_for
 
 from models import User, db
 from services.email_service import send_email
+from services.team_service import create_personal_team
 
 logger = logging.getLogger(__name__)
 
 VERIFICATION_TOKEN_TTL_HOURS = 24
+RESET_TOKEN_TTL_HOURS = 2
 
 
 class AuthError(Exception):
@@ -37,6 +39,7 @@ def register_user(email: str, password: str, confirm_password: str) -> User:
     db.session.add(user)
     db.session.commit()
 
+    create_personal_team(user)
     send_verification_email(user)
     logger.info("Registered new user: %s", email)
     return user
@@ -100,3 +103,69 @@ def authenticate(email: str, password: str) -> User:
     if not user.is_verified:
         raise AuthError("Please verify your email before logging in.")
     return user
+
+
+def request_password_reset(email: str) -> None:
+    """
+    Issue a password-reset token and email it.
+
+    Silently no-ops if the email is unknown — the caller always shows the
+    same generic message either way, to avoid leaking which emails have accounts.
+    """
+    user = User.query.filter_by(email=(email or "").strip().lower()).first()
+    if not user:
+        return
+
+    user.reset_token = secrets.token_urlsafe(32)
+    user.reset_sent_at = dt.datetime.utcnow()
+    db.session.commit()
+
+    reset_url = url_for("auth.reset_password_route", token=user.reset_token, _external=True)
+    body = (
+        "A password reset was requested for your account.\n\n"
+        f"Reset your password (valid for {RESET_TOKEN_TTL_HOURS} hours):\n{reset_url}\n\n"
+        "If you didn't request this, you can safely ignore this email — your password won't change."
+    )
+    send_email(user.email, "Reset your password", body)
+
+
+def get_user_by_reset_token(token: str) -> User | None:
+    """Return the user for a reset token if it's valid and unexpired, else None."""
+    user = User.query.filter_by(reset_token=token).first()
+    if not user or not user.reset_sent_at:
+        return None
+    if dt.datetime.utcnow() - user.reset_sent_at > dt.timedelta(hours=RESET_TOKEN_TTL_HOURS):
+        return None
+    return user
+
+
+def reset_password(token: str, new_password: str, confirm_password: str) -> User:
+    """Consume a reset token and set a new password. Raises AuthError on any problem."""
+    user = get_user_by_reset_token(token)
+    if not user:
+        raise AuthError("That reset link is invalid or has expired.")
+    if len(new_password) < 8:
+        raise AuthError("Password must be at least 8 characters.")
+    if new_password != confirm_password:
+        raise AuthError("Passwords do not match.")
+
+    user.set_password(new_password)
+    user.reset_token = None
+    user.reset_sent_at = None
+    db.session.commit()
+    logger.info("Password reset completed for %s", user.email)
+    return user
+
+
+def change_password(user: User, current_password: str, new_password: str, confirm_password: str) -> None:
+    """Change a logged-in user's password after confirming their current one."""
+    if not user.check_password(current_password):
+        raise AuthError("Current password is incorrect.")
+    if len(new_password) < 8:
+        raise AuthError("New password must be at least 8 characters.")
+    if new_password != confirm_password:
+        raise AuthError("New passwords do not match.")
+
+    user.set_password(new_password)
+    db.session.commit()
+    logger.info("Password changed for %s", user.email)

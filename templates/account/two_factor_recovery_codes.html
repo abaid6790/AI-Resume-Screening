@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Save Your Recovery Codes — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Two-factor authentication is enabled</h1>
+    <p class="ars-subtitle">Save these recovery codes somewhere safe — <strong>this is the only time they'll be shown.</strong></p>
+  </div>
+</div>
+
+<div class="ars-card" style="max-width: 560px;">
+  <h2 class="ars-card-title">Recovery codes</h2>
+  <p class="ars-empty-note">
+    Each code can be used once, in place of your authenticator app, if you lose access to your device.
+  </p>
+  <div class="ars-recovery-codes">
+    {% for code in recovery_codes %}
+    <code>{{ code }}</code>
+    {% endfor %}
+  </div>
+  <a class="btn ars-btn-primary mt-3" href="{{ url_for('account.security') }}">I've saved these — done</a>
+</div>
+{% endblock %}

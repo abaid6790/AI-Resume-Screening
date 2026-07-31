@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any, TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy import JSON as SAJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,6 +12,7 @@ from models import db
 
 if TYPE_CHECKING:
     from models.screening_result import ScreeningResult
+    from models.team import Team
 
 
 class JobDescription(db.Model):
@@ -20,6 +21,7 @@ class JobDescription(db.Model):
     __tablename__ = "job_descriptions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    team_id: Mapped[int] = mapped_column(ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -36,6 +38,7 @@ class JobDescription(db.Model):
         DateTime, default=dt.datetime.utcnow, nullable=False
     )
 
+    team: Mapped["Team"] = relationship(back_populates="job_descriptions")
     screening_results: Mapped[list["ScreeningResult"]] = relationship(
         back_populates="job_description",
         cascade="all, delete-orphan",

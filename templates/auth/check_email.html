@@ -11,7 +11,7 @@
     <h1 class="ars-auth-title">Check your email</h1>
     <p class="ars-subtitle">
       We've sent a verification link{% if email %} to <strong>{{ email }}</strong>{% endif %}.
-      Click it to activate your account — it's valid for 5 Mins
+      Click it to activate your account — it's valid for 24 hours.
     </p>
     <p class="ars-auth-footer">
       Didn't get it? <a href="{{ url_for('auth.resend') }}">Resend the verification email</a><br>

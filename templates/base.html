@@ -52,11 +52,25 @@
           <li class="nav-item">
             <a class="nav-link {% if request.blueprint == 'export' %}active{% endif %}" href="{{ url_for('export.index') }}">Export</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.blueprint == 'teams' %}active{% endif %}" href="{{ url_for('teams.index') }}">Team</a>
+          </li>
         </ul>
-        <div class="ars-navbar-user">
-          <span class="ars-user-avatar" aria-hidden="true">{{ current_user.email[0]|upper }}</span>
-          <span class="ars-user-email">{{ current_user.email }}</span>
-          <a class="btn btn-sm ars-btn-ghost" href="{{ url_for('auth.logout') }}">Log out</a>
+        <div class="dropdown ars-navbar-user">
+          <button class="ars-user-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="ars-user-avatar" aria-hidden="true">{{ current_user.email[0]|upper }}</span>
+            <span class="ars-user-email">{{ current_user.email }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end ars-dropdown-menu">
+            {% if g.current_team %}
+            <li><h6 class="dropdown-header">{{ g.current_team.name }}</h6></li>
+            <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{{ url_for('account.security') }}">Security settings</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('teams.index') }}">Team management</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Log out</a></li>
+          </ul>
         </div>
         {% else %}
         <ul class="navbar-nav me-auto"></ul>

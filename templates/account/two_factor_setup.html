@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Set Up Two-Factor Authentication — {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="ars-page-header">
+  <div>
+    <h1>Set Up Two-Factor Authentication</h1>
+    <p class="ars-subtitle">Scan the code below with your authenticator app, then enter the 6-digit code it shows.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-5">
+    <div class="ars-card text-center">
+      <h2 class="ars-card-title">1. Scan this QR code</h2>
+      <div class="ars-qr-wrap">
+        {{ qr_svg|safe }}
+      </div>
+      <p class="ars-empty-note mt-3 mb-1">Can't scan it? Enter this key manually:</p>
+      <code class="ars-manual-key">{{ secret }}</code>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-7">
+    <div class="ars-card">
+      <h2 class="ars-card-title">2. Confirm with a code</h2>
+      <p class="ars-subtitle mb-3">Enter the current 6-digit code from your app to finish enabling 2FA.</p>
+      <form method="POST" action="{{ url_for('account.two_factor_setup') }}" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="code">Authentication code</label>
+          <input class="form-control ars-otp-input" type="text" id="code" name="code"
+                 inputmode="numeric" placeholder="123456" required autofocus>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn ars-btn-primary">Enable 2FA</button>
+          <a class="btn ars-btn-ghost" href="{{ url_for('account.security') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

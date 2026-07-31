@@ -11,7 +11,7 @@ import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, g, redirect, render_template, request, session, url_for
 from flask_login import LoginManager, current_user
 
 from config import get_config
@@ -113,14 +113,33 @@ def create_app(config_name: str | None = None) -> Flask:
 
     @app.before_request
     def require_login():
-        """Gate every route behind login except auth pages, /health, and static files."""
+        """
+        Gate every route behind login except auth pages, /health, and static files.
+
+        Also handles the "password correct, 2FA not yet completed" state (keeps
+        the person on the 2FA page instead of bouncing back to plain login),
+        and resolves which team the request is operating in (g.current_team)
+        for every authenticated request.
+        """
         endpoint = request.endpoint
         if endpoint is None:
             return
         if endpoint in _PUBLIC_ENDPOINTS or endpoint.startswith("auth."):
             return
+
+        if session.get("pending_2fa_user_id") and not current_user.is_authenticated:
+            return redirect(url_for("auth.two_factor"))
+
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login", next=request.path))
+
+        from services.team_service import create_personal_team, resolve_current_team
+
+        team = resolve_current_team(current_user)
+        if team is None:  # defensive: normal registration always creates one
+            team = create_personal_team(current_user)
+            session["current_team_id"] = team.id
+        g.current_team = team
 
     if not app.config.get("GEMINI_API_KEY"):
         app.logger.warning(

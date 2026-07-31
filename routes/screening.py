@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from sqlalchemy import desc, nullslast
 
 from models import JobDescription, Resume, ScreeningResult
@@ -16,16 +16,26 @@ screening_bp = Blueprint("screening", __name__)
 
 @screening_bp.route("/")
 def index() -> str:
-    """Pick a job description and choose which resumes to screen against it."""
-    jobs = JobDescription.query.order_by(JobDescription.created_at.desc()).all()
-    resumes = Resume.query.order_by(Resume.uploaded_at.desc()).all()
+    """Pick a job description and choose which resumes to screen against it (current team only)."""
+    jobs = (
+        JobDescription.query.filter_by(team_id=g.current_team.id)
+        .order_by(JobDescription.created_at.desc())
+        .all()
+    )
+    resumes = (
+        Resume.query.filter_by(team_id=g.current_team.id)
+        .order_by(Resume.uploaded_at.desc())
+        .all()
+    )
 
     selected_job_id = request.args.get("job_id", type=int)
     selected_job = None
     already_screened_ids: set[int] = set()
 
     if selected_job_id:
-        selected_job = JobDescription.query.get_or_404(selected_job_id)
+        selected_job = JobDescription.query.filter_by(
+            id=selected_job_id, team_id=g.current_team.id
+        ).first_or_404()
         already_screened_ids = {
             r.resume_id
             for r in ScreeningResult.query.filter_by(job_description_id=selected_job_id).all()
@@ -50,13 +60,17 @@ def run():
         flash("Choose a job description first.", "error")
         return redirect(url_for("screening.index"))
 
-    job = JobDescription.query.get_or_404(job_id)
+    job = JobDescription.query.filter_by(id=job_id, team_id=g.current_team.id).first_or_404()
 
     if not resume_ids:
         flash("Choose at least one resume to screen.", "error")
         return redirect(url_for("screening.index", job_id=job_id))
 
-    resumes = Resume.query.filter(Resume.id.in_(resume_ids)).all()
+    # team_id filter here matters: without it, a crafted resume_ids list could
+    # screen another team's resume against this team's job description.
+    resumes = Resume.query.filter(
+        Resume.id.in_(resume_ids), Resume.team_id == g.current_team.id
+    ).all()
 
     succeeded, skipped, failed = 0, 0, 0
     for resume in resumes:
@@ -83,7 +97,7 @@ def run():
 @screening_bp.route("/results/<int:job_id>")
 def results(job_id: int):
     """Show all screening results for one job description, best score first."""
-    job = JobDescription.query.get_or_404(job_id)
+    job = JobDescription.query.filter_by(id=job_id, team_id=g.current_team.id).first_or_404()
     job_results = (
         ScreeningResult.query.filter_by(job_description_id=job_id)
         .order_by(nullslast(desc(ScreeningResult.match_score)), desc(ScreeningResult.created_at))
@@ -115,6 +129,10 @@ def _build_result_row(result: ScreeningResult) -> dict:
 
 @screening_bp.route("/result/<int:result_id>")
 def detail(result_id: int):
-    """Show one candidate's full evaluation report."""
-    result = ScreeningResult.query.get_or_404(result_id)
+    """Show one candidate's full evaluation report — 404s if it's not this team's."""
+    result = (
+        ScreeningResult.query.join(JobDescription)
+        .filter(ScreeningResult.id == result_id, JobDescription.team_id == g.current_team.id)
+        .first_or_404()
+    )
     return render_template("screening/detail.html", result=result)

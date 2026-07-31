@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any, TYPE_CHECKING
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models import db
@@ -12,6 +12,7 @@ from models.enums import ExtractionStatus
 
 if TYPE_CHECKING:
     from models.screening_result import ScreeningResult
+    from models.team import Team
 
 
 class Resume(db.Model):
@@ -21,11 +22,13 @@ class Resume(db.Model):
     Deliberately NOT tied to one job_description_id: the same resume can be
     screened against multiple job descriptions over time. That link lives on
     ScreeningResult instead, so a resume is uploaded once and reused.
+    IS tied to a team_id, so resumes never leak across teams.
     """
 
     __tablename__ = "resumes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    team_id: Mapped[int] = mapped_column(ForeignKey("teams.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Original uploaded filename and the path it was stored at on disk.
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -47,6 +50,7 @@ class Resume(db.Model):
         DateTime, default=dt.datetime.utcnow, nullable=False
     )
 
+    team: Mapped["Team"] = relationship(back_populates="resumes")
     screening_results: Mapped[list["ScreeningResult"]] = relationship(
         back_populates="resume",
         cascade="all, delete-orphan",
