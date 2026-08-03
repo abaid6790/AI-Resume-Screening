@@ -96,13 +96,13 @@ It's a full-stack Flask app: server-rendered pages (Jinja2 + Bootstrap 5), a SQL
 
 > Add real screenshots to `docs/screenshots/` and update the paths below — placeholders shown here.
 
-| Dashboard | AI Screening Report |
+| Dashboard |Dashboard |
 |---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Report](docs/screenshots/report.png) |
+| ![Dashboard](screenshots/Dashboard-1.png) | ![Dashboard](screenshots/Dashboard-2.png) |
 
-| Results (search & filter) | Login |
+| Login | Register |
 |---|---|
-| ![Results](docs/screenshots/results.png) | ![Login](docs/screenshots/login.png) |
+| ![Results](screenshots/Login.png) | ![Login](screenshots/Register.png) |
 
 ---
 
@@ -118,7 +118,7 @@ flowchart LR
     F -->|SMTP or dev-log fallback| E["Verification email"]
 ```
 
-Request flow for a screening run: **pick a job description → select resumes → Flask calls Gemini once per resume → validated JSON is persisted as a `ScreeningResult` → results page queries and renders it.**
+Request flow for a screenig run: **pick a job description → select resumes → Flask calls Gemini once per resume → validated JSON is persisted as a `ScreeningResult` → results page queries and renders it.**
 
 ---
 
