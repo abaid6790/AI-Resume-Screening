@@ -94,8 +94,6 @@ It's a full-stack Flask app: server-rendered pages (Jinja2 + Bootstrap 5), a SQL
 
 ## Screenshots
 
-> Add real screenshots to `docs/screenshots/` and update the paths below — placeholders shown here.
-
 | Dashboard |Dashboard |
 |---|---|
 | ![Dashboard](screenshots/Dashboard-1.png) | ![Dashboard](screenshots/Dashboard-2.png) |
